@@ -11,7 +11,8 @@ promotion to the global config (`~/.config/opencode/`).
 **Status:** Phases 0–4 implemented and validated (2026-08-15); Phase 4.5 worktree-plugin
 fork complete (2026-08-15, see §4.5.5); **Phase 5 re-scoped (2026-08-15): portability —
 package the harness as a copyable template; no global promotion. Phase 6 (dynamic model
-routing) removed.**
+routing) removed.** Constitution migrated to `.opencode/constitution.md` (injected via
+`instructions`; AGENTS.md = workspace notes only) — 2026-08-15, see decision 8.
 
 ---
 
@@ -69,6 +70,13 @@ agent when to use it.
    > `~/.config/opencode/plugins/` (edited in place by the user), and validated —
    > see §4.5.5. It is not staged in `.opencode/plugin/` as originally sketched —
    > the move into the repo is Phase 5 work (§5.3).
+8. **Constitution injection** (2026-08-15): the Harness Constitution moved from
+   `AGENTS.md` to `.opencode/constitution.md`, injected into every agent via the
+   `instructions` field in `opencode.json`. `AGENTS.md` is workspace-specific
+   notes only — a copied harness leaves AGENTS.md clear for the new project's
+   own instructions. Skills were rejected as the carrier: they load on demand,
+   while the constitution must be unconditionally present in every agent's
+   context.
 
 ## 4. Target architecture
 
@@ -100,8 +108,10 @@ agent when to use it.
 ```
 
 - **Permissions** (`opencode.json`) = safety net / approval gates.
-- **AGENTS.md** = harness constitution read by every agent (division of
-  responsibility, approval boundary, loop contract).
+- **`.opencode/constitution.md`** = harness constitution (division of
+  responsibility, approval boundary, loop contract), injected into every agent
+  via the `instructions` field in `opencode.json`.
+- **AGENTS.md** = workspace-specific notes only (project facts, conventions).
 - **Commands** (`/feature`, `/ship`) = feature-level entry points.
 - **Worktree plugin** = parallel-isolation primitive, invoked by `lead` when
   tasks are independent.
@@ -199,6 +209,11 @@ worktree plugin and Phase 4 scenarios cannot run.
 
 **File:** `AGENTS.md` (repo root — opencode auto-loads it into every agent's
 context in this project).
+
+> **Superseded 2026-08-15 (decision 8):** the constitution below moved to
+> `.opencode/constitution.md`, injected via the `instructions` field in
+> `opencode.json`. `AGENTS.md` now holds workspace-specific notes only. The
+> content below is preserved as the historical Phase 1 record.
 
 This is the behavioral contract. Content:
 
@@ -775,9 +790,11 @@ as a template; nothing is promoted globally.
    vendor the upstream original under `vendor/` for attribution; verify no duplicate
    tool registration while the global copy still exists (disable or remove the global
    one when the template is adopted).
-2. **Template manifest:** a documented file list — `AGENTS.md`, `opencode.json`,
-   `.opencode/` (agents, commands, plugin, worktree.jsonc, package.json for deps),
-   `docs/validation.md` (scenario checklist). Everything a new workspace needs.
+2. **Template manifest:** a documented file list — `AGENTS.md` (workspace notes),
+   `opencode.json` (incl. `instructions` → `.opencode/constitution.md`),
+   `.opencode/` (constitution, agents, commands, plugin, worktree.jsonc,
+   package.json for deps), `docs/validation.md` (scenario checklist). Everything
+   a new workspace needs.
 3. **Copy/setup script:** `scripts/init-harness.sh` (or a command) that copies the
    manifest into a target directory and parameterizes the adaptive bits: project
    name, model routing table (currently unset — inherits session/global model),
@@ -786,9 +803,10 @@ as a template; nothing is promoted globally.
    project, re-run scenarios 1–11 against it, tune permissions, and opt out of
    `default_agent`.
 5. **Exit criteria:** copy the manifest into a fresh empty directory, restart
-   opencode, and verify: agents present and citing AGENTS.md, `/feature` + `/ship`
-   route through `lead`, worktree tools available with no terminal spawn, scenarios
-   1–11 pass against a small substitute project.
+   opencode, and verify: agents present and citing the constitution (injected
+   via `instructions`), `/feature` + `/ship` route through `lead`, worktree
+   tools available with no terminal spawn, scenarios 1–12 pass against a small
+   substitute project.
 
 ### 5.4 Scope guardrails
 
@@ -805,7 +823,8 @@ sign-off complete — all validation scenarios 1–11 pass (`docs/validation.md`
 ## Appendix A — Execution order summary
 
 1. Phase 0: scaffold repo (`opencode.json`, `.gitignore`) → restart opencode.
-2. Phase 1: write `AGENTS.md` constitution → verify agents cite it.
+2. Phase 1: write the harness constitution (now `.opencode/constitution.md`,
+   injected via `instructions`; originally `AGENTS.md`) → verify agents cite it.
 3. Phase 2: create the five agent files → verify roles/permissions.
 4. Phase 3: create the three commands → verify routing.
 5. Phase 4: build sandbox, run scenarios 1–8, sign off in `docs/validation.md`.

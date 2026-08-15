@@ -1,5 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "instructions": [".opencode/constitution.md"],
   "default_agent": "lead",
   "permission": {
     "bash": {
