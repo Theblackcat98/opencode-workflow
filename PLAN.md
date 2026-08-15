@@ -56,6 +56,10 @@ agent when to use it.
 6. **No "read AGENTS.md" instructions** (2026-08-15): opencode auto-injects
    AGENTS.md into every session, including subagents. Agent prompts rely on
    the injected constitution instead of instructing agents to read it.
+7. **Fork the worktree plugin** (2026-08-15): the global worktree plugin is
+   forked into this repo, adapted to the harness workflow (Termux terminal
+   detection, `worktree_apply` merge-back, stale-worktree GC) and validated
+   in Phase 4.5 **before** it graduates to global in Phase 5.
 
 ## 4. Target architecture
 
@@ -585,6 +589,85 @@ pass.**
 
 ---
 
+## Phase 4.5 — Fork & adapt the worktree plugin
+
+The worktree plugin (global `~/.config/opencode/plugins/worktree.ts` +
+`worktree/` + `kdco-primitives/`) is forked into this repo, modified to fit
+the harness workflow, and validated — **before** it graduates to global in
+Phase 5.
+
+### 4.5.1 Why
+
+The plugin is the isolation primitive for the delegation loop, but it is not
+ours. Three issues surfaced during Phase 4 testing/research:
+
+1. **Termux terminal detection fails.** `detectTerminalType()` (in
+   `worktree/terminal.ts` + `kdco-primitives/terminal-detect.ts`) uses tmux
+   only when the process is *already inside* a tmux session (`TMUX` env var),
+   then falls back to cmux (absent) and Linux desktop terminals (absent on
+   Termux). Result: `No terminal emulator found` (observed 2026-08-15) even
+   though tmux is installed.
+2. **No merge-back.** The plugin offers `worktree_create` / `worktree_delete`
+   only; child worktree changes must be merged into the main checkout
+   manually. grok-build solves this with `workspace.apply_worktree`
+   (`ApplyMode::Overwrite` / `Merge` + conflict report) — flagged as the
+   **highest-value gap** in `RESEARCH-grok-build.md` §4.
+3. **No stale-worktree GC.** Abandoned worktrees accumulate; grok-build
+   mirrors this with auto-GC (`xai-fast-worktree/src/auto_gc.rs`).
+
+Fork location: `.opencode/plugin/` (project-scoped auto-discovery). The
+global plugin remains untouched until the fork passes validation.
+
+### 4.5.2 Steps
+
+1. **Fork into the repo:** copy `~/.config/opencode/plugins/worktree.ts`,
+   `worktree/`, and `kdco-primitives/` into `.opencode/plugin/`, preserving
+   structure. Note: project plugins auto-register alongside global ones, so
+   while testing the fork, disable the global copy (move it aside) to avoid
+   duplicate tool registration.
+2. **Fix terminal detection** (Termux):
+   - inside tmux → tmux window (unchanged);
+   - else if `tmux` binary exists → start a detached tmux session/window for
+     the worktree (Termux path — this is the fix);
+   - else if cmux → cmux workspace (unchanged);
+   - else → platform terminal (unchanged).
+3. **Add `worktree_apply` tool** (mirrors grok `workspace.apply_worktree`):
+   - `mode: overwrite` (default) — copy the child worktree's changes over the
+     main tree;
+   - `mode: merge` — merge the child's changes into the main working
+     directory; report conflicts (file list) and a copied-changes summary;
+     leave conflicts unstaged for `lead`/user resolution.
+4. **Add stale-worktree GC:** on plugin load and before each create, prune
+   worktrees whose session/branch is gone or older than a configured max-age;
+   mirror `auto_gc.rs` semantics on top of the plugin's SQLite state.
+5. **Wire the workflow (make it ours):**
+   - `lead.md` delegation conventions: `worktree_create` in parallel for
+     independent tasks; `worktree_apply` (merge) back to the main checkout
+     before the final report; flat delegation — subagents never delegate
+     (grok's depth limit = 1).
+   - `.opencode/worktree.jsonc` config for this repo (already present from
+     Phase 4).
+6. **Validate:** extend `docs/validation.md` with scenarios 9–11 below and
+   run them; record outcomes in the sign-off table.
+
+### 4.5.3 New validation scenarios
+
+| # | Scenario | How to run | Expected |
+|---|---|---|---|
+| 9 | Worktree create on Termux | From inside tmux, trigger `worktree_create` for an independent task | Worktree session opens in a new tmux window; isolated work completes; no "No terminal emulator found" |
+| 10 | Merge-back (`worktree_apply`) | Work in a worktree (change + commit), then `worktree_apply` with `merge`; introduce an overlapping edit to force a conflict | Changes merge into main; conflicts reported as a file list; no data loss |
+| 11 | Stale-worktree GC | Abandon a worktree (close its session), reload opencode, list worktrees | Abandoned worktree pruned automatically |
+
+### 4.5.4 Acceptance / sign-off
+
+- Fixes 1–3 validated; scenarios 9–11 pass and are recorded in
+  `docs/validation.md` alongside scenarios 1–8.
+- `worktree_create`, `worktree_apply`, `worktree_delete` work from `lead`
+  with the project-scoped fork (global copy disabled during testing).
+- Phase 5 graduates the **fork** to global only after this sign-off.
+
+---
+
 ## Phase 5 — Promotion to global (deferred until Phase 4 sign-off)
 
 Mechanical, not new work:
@@ -595,6 +678,7 @@ Mechanical, not new work:
 | `opencode.json` permission block | merged into `opencode.json` |
 | `AGENTS.md` (harness constitution) | kept per-project as a template; global `AGENTS.md` gains only the environment/terminal notes |
 | `.opencode/commands/*.md` | `commands/` |
+| `.opencode/plugin/` (forked worktree plugin) | `plugins/` — replaces the original global `worktree.ts` + `worktree/` + `kdco-primitives/` (keep a backup of the original in this repo under `vendor/`) |
 | Model routing table (§5) | pinned `model:` fields in each agent |
 | `docs/validation.md` outcomes | recorded as the promotion record |
 
@@ -631,8 +715,10 @@ export default (async () => ({
 3. Phase 2: create the five agent files → verify roles/permissions.
 4. Phase 3: create the three commands → verify routing.
 5. Phase 4: build sandbox, run scenarios 1–8, sign off in `docs/validation.md`.
-6. Phase 5: promote to global (only after sign-off).
-7. Phase 6: dynamic routing (only if needed).
+6. Phase 4.5: fork + adapt the worktree plugin (Termux fix, `worktree_apply`,
+   GC) → validate scenarios 9–11, sign off.
+7. Phase 5: promote to global (only after Phase 4 + 4.5 sign-off).
+8. Phase 6: dynamic routing (only if needed).
 
 ## Appendix B — Config change reminder
 
