@@ -41,10 +41,10 @@ fallback path).
 | 2 Convention compliance | pass | none | 2026-08-15 |
 | 3 Failure iteration | pass | none | 2026-08-15 |
 | 4 Review pass | pass | none | 2026-08-15 |
-| 5 Approval gate | needs user | interactive push test pending — needs a live session + `origin` remote (config rules verified present) | 2026-08-15 |
+| 5 Approval gate | pass | user-verified live 2026-08-15 (ask prompt confirmed); config rules present | 2026-08-15 |
 | 6 Docs update | pass | none | 2026-08-15 |
 | 7 Delegation depth | pass | none | 2026-08-15 |
-| 8 Worktree (Termux risk) | pass (fallback) | plugin `worktree_create` terminal fork unverified on Termux — needs interactive run; bash fallback works | 2026-08-15 |
+| 8 Worktree (Termux risk) | pass | plugin forked/adapted 2026-08-15 — no terminal spawn (Phase 4.5); see scenarios 9–11 | 2026-08-15 |
 
 **Promotion gate: scenarios 1–7 must pass before any file is promoted to global.**
 Scenario 5 is the sole gate-holder: config is in place and verified, but the interactive `ask`
