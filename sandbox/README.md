@@ -11,7 +11,7 @@ tested, and consistent with the conventions in this directory's `AGENTS.md`.
 - `sensor.py` — a simulated temperature `Sensor`.
 - `display.py` — `format_temperature` for Celsius/Fahrenheit output.
 - `main.py` — CLI demo: `python3 main.py --temperature 19.4` prints whether
-  heating runs.
+  heating runs; `python3 main.py --version` prints the version.
 - `test_*.py` — `unittest` suite (stdlib only, no dependencies).
 
 ## Development
@@ -24,6 +24,5 @@ python3 -m unittest discover -s sandbox
 
 ## Roadmap (training features)
 
-- `--version` flag on the CLI
 - Fahrenheit mode across display and sensor/thermostat
 - Caching of heating decisions (intentionally conflicts with tests)
