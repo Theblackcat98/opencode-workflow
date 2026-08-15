@@ -19,7 +19,7 @@ tested, and consistent with the conventions in this directory's `AGENTS.md`.
 ## Usage
 
 ```
-$ python3 main.py --temperature 25 --unit f
+python3 main.py --temperature 25 --unit f
 current: 77.0 F
 setpoint: 68.0 F
 idle
