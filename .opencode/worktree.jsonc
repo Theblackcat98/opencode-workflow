@@ -1,0 +1,14 @@
+{
+  "$schema": "https://registry.kdco.dev/schemas/worktree.json",
+
+  "sync": {
+    "copyFiles": [],
+    "symlinkDirs": [],
+    "exclude": []
+  },
+
+  "hooks": {
+    "postCreate": [],
+    "preDelete": []
+  }
+}
