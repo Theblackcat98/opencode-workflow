@@ -11,8 +11,11 @@ promotion to the global config (`~/.config/opencode/`).
 **Status:** Phases 0–4.5 implemented and validated (2026-08-15) — scaffold, git init,
 constitution, agent team, commands, sandbox validation (scenarios 1–8), and the worktree
 plugin fork + gap-fix round (scenarios 9–11) are all complete; see the per-phase status
-notes below. **Phase 5 (portability — copyable template, no global promotion) is the only
-remaining phase: planned, not started.** Phase 6 (dynamic model routing) removed.
+notes below. **Phase 4.6 (delegation-first workflow & command integration) is planned,
+not started** — addresses two observed weaknesses from real usage: the lead still does
+too much work itself, and the commands are disconnected from the workflow. **Phase 5
+(portability — copyable template, no global promotion) remains the final phase: planned,
+not started.** Phase 6 (dynamic model routing) removed.
 Constitution migrated to `.opencode/constitution.md` (injected via `instructions`;
 AGENTS.md = workspace notes only) — 2026-08-15, see decision 8.
 
@@ -79,6 +82,12 @@ agent when to use it.
    own instructions. Skills were rejected as the carrier: they load on demand,
    while the constitution must be unconditionally present in every agent's
    context.
+9. **Delegation-first policy** (2026-08-15, Phase 4.6): the lead is an
+   orchestrator, not an implementer — execution (investigation, planning,
+   implementation, test iteration, review) is delegated to subagents; the
+   lead's context is reserved for coordination. Enforced via prompt policy
+   (`lead.md` + constitution §3a), not permissions — the lead keeps `edit`/
+   `bash` for integration fixes (merge conflicts, one-line corrections).
 
 ## 4. Target architecture
 
@@ -783,6 +792,82 @@ reconciliation, and `deleteBranch: auto` all verified live. README updated throu
 
 ---
 
+## Phase 4.6 — Delegation-first workflow & command integration (planned 2026-08-15)
+
+Goal: fix two weaknesses observed in real usage — (1) the lead agent still does
+too much work itself (implementation, investigation, test iteration), defeating
+the context-management and parallelism design; (2) the commands (`/feature`,
+`/ship`, `/status`) are thin wrappers disconnected from the workflow — they
+never mention worktrees, parallel delegation, or the plan/review checkpoints.
+
+### 4.6.1 Problem analysis
+
+**Lead does too much.** Root causes:
+
+- `lead.md` step 5 explicitly permits: "Implement production-quality code
+  yourself for routine changes" — an open invitation to self-implement.
+- No delegation *rules*: when to delegate vs. self-serve is left to model
+  discretion, and models default to doing work themselves (less overhead,
+  more control).
+- No context-management guidance: the lead's context is consumed by file
+  reads, diffs, and test output that should live in subagent contexts. The
+  lead's context is the session's coordination budget — every self-served
+  read shrinks it.
+- The worktree parallel pattern exists as tools (`worktree_create` /
+  `worktree_apply`) but the lead prompt never describes the create → parallel
+  coder → merge-back workflow, so it is rarely used.
+
+**Commands disconnected.** Root causes:
+
+- Commands are one-liners ("do the loop") that encode no workflow structure —
+  the loop lives only in the lead's prompt, so commands add nothing.
+- No command references the worktree tools; `/ship` would close out work
+  without applying pending worktrees.
+- No plan/review checkpoints for the product owner (`/plan`, `/review`) —
+  the user cannot approve a plan before implementation or request a review
+  pass without re-running the whole loop.
+- `/status` omits worktree state even though `worktree_list` exists.
+
+### 4.6.2 Changes (file-level)
+
+| File | Change |
+|---|---|
+| `.opencode/agents/lead.md` | Rewrite: orchestrator-not-implementer role; delegation rules table (work → agent); context-management rules; worktree parallel pattern; flat delegation; final report must list which subagents did what |
+| `.opencode/constitution.md` | Rewrite §3 loop to delegation-first; add §3a "Delegation policy" (delegation table, context rules, parallelism, flat delegation) |
+| `.opencode/agents/coder.md` | Add: worktree awareness (work in the given directory via bash `workdir`); concise reporting (no full file/test dumps) |
+| `.opencode/agents/planner.md` | Add: concise plan output (lead passes it to coder); no file dumps |
+| `.opencode/agents/reviewer.md` | Add: concise findings (file:line list); no full diff dumps |
+| `.opencode/agents/researcher.md` | Add: concise answer/evidence/recommendation (mostly present) |
+| `.opencode/commands/feature.md` | Rewrite: encode the full delegation-first workflow incl. worktree parallelism |
+| `.opencode/commands/ship.md` | Rewrite: worktree-aware close-out (apply pending worktrees first) |
+| `.opencode/commands/status.md` | Add worktree state to the report |
+| `.opencode/commands/plan.md` | **NEW** — plan-only checkpoint: planner → present plan → stop for user approval |
+| `.opencode/commands/review.md` | **NEW** — review-only pass: reviewer → delegate fixes → report |
+| `.opencode/commands/worktree.md` | **NEW** — worktree management: list/create/apply/delete/gc |
+| `docs/validation.md` | Add scenarios 13–16 |
+| `README.md` | Update agents/commands tables; add "Delegation & parallelism" section |
+
+### 4.6.3 Validation scenarios (13–16)
+
+| # | Scenario | How to run | Expected |
+|---|---|---|---|
+| 13 | Delegation-first | `/feature` a small sandbox feature | Transcript shows `coder` implemented (lead never edited code); lead's report lists subagent contributions |
+| 14 | Parallel worktrees | `/feature` two independent sandbox features | Two worktrees created; parallel coders; both merged back via `worktree_apply`; tests green |
+| 15 | Command integration | `/plan` (stops for approval), `/review` (reviews current diff), `/worktree` (list/create/apply), `/ship` with a pending worktree | Each command routes through `lead` and performs its stage; ship applies pending worktrees first |
+| 16 | Context management | Ask `lead` to summarize its own delegation pattern mid-feature | Lead's context stays small: it read few files directly; subagents did the heavy reading |
+
+### 4.6.4 Acceptance
+
+- `lead` never implements features itself (transcript-verifiable).
+- Independent tasks run in parallel worktrees by default.
+- Commands encode the workflow; plan/review/worktree checkpoints work.
+- Scenarios 13–16 pass and are recorded in `docs/validation.md`.
+- Phase 5 (portability) then packages the hardened workflow.
+
+**Status (2026-08-15):** planned — implementation pending user go-ahead.
+
+---
+
 ## Phase 5 — Portability: copy to any workspace (re-scoped 2026-08-15)
 
 The old goal — graduate the harness to `~/.config/opencode/` — is **dropped**.
@@ -861,9 +946,12 @@ as a template; nothing is promoted globally.
 5. **DONE** — Phase 4: build sandbox, run scenarios 1–8, sign off in `docs/validation.md`.
 6. **DONE** — Phase 4.5: fork + adapt the worktree plugin (Termux fix, `worktree_apply`,
    GC) → validate scenarios 9–11, sign off.
-7. **PENDING** — Phase 5: package the harness as a copyable template for any workspace
-   (re-scoped 2026-08-15 — no global promotion; Phase 6 removed). Only remaining
-   phase; execution pending user go-ahead.
+7. **PENDING** — Phase 4.6: delegation-first workflow & command integration
+   (lead = orchestrator, worktree parallelism, `/plan` `/review` `/worktree` commands,
+   scenarios 13–16). Planned 2026-08-15; implementation pending user go-ahead.
+8. **PENDING** — Phase 5: package the harness as a copyable template for any workspace
+   (re-scoped 2026-08-15 — no global promotion; Phase 6 removed). Final phase;
+   execution pending user go-ahead.
 
 ## Appendix B — Config change reminder
 
