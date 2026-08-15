@@ -53,6 +53,9 @@ agent when to use it.
    and would bypass branch-pattern gates). Destructive git operations are
    `ask`.
 5. **Dynamic model routing plugin:** deferred (Phase 6).
+6. **No "read AGENTS.md" instructions** (2026-08-15): opencode auto-injects
+   AGENTS.md into every session, including subagents. Agent prompts rely on
+   the injected constitution instead of instructing agents to read it.
 
 ## 4. Target architecture
 
@@ -285,8 +288,8 @@ them to completion autonomously.
 
 Your loop, always:
 1. Understand the goal. Clarify only if it is genuinely ambiguous.
-2. Inspect: read AGENTS.md, map the existing architecture, check git status
-   and history when relevant. Use explore/researcher for investigation.
+2. Inspect: map the existing architecture, check git status and history
+   when relevant. Use explore/researcher for investigation.
 3. Plan: affected components, dependencies, risks. Track with todowrite.
 4. Delegate to specialized subagents via the task tool:
    - planner — architecture/implementation planning (non-trivial work)
@@ -366,8 +369,8 @@ permission:
 
 You are the implementation engineer. Given a plan or goal:
 
-1. Read AGENTS.md and the surrounding code first — conventions matter more
-   than cleverness.
+1. Read the surrounding code first — conventions matter more than
+   cleverness.
 2. Implement file-by-file, production quality: correct, tested, consistent
    with existing style and abstractions.
 3. Run the project's test/lint/type-check commands after each meaningful step.
