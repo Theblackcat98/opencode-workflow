@@ -694,6 +694,41 @@ global plugin remains untouched until the fork passes validation.
   `maxAgeDays: 30`, `onlyIfMerged`, never prunes without a recorded base branch).
 - **Step 6 done:** scenarios 9–11 ran and passed — results in `docs/validation.md`.
 
+### 4.5.6 Gap-fix round (2026-08-15) — DONE
+
+Gaps raised in review of the Phase 4.5 validation run; all landed in the fork
+(`~/.config/opencode/plugins/worktree.ts`):
+
+1. **Branch cleanup** — `worktree_delete(deleteBranch: "auto" | "always" | "never")`,
+   default `auto`: `git branch -d` when merged into the base, `-D` for `always`, kept for
+   `never`. Verified live: branch deleted after worktree removal.
+2. **Manual GC trigger** — new `worktree_gc(dryRun?, maxAgeDays?)` tool; `runGc` now
+   returns a report (`pruned` / `unregistered` / `kept` with reasons) instead of
+   swallowing results. Verified: clean dry-run, prune report, kept-with-reason.
+3. **Age path testable** — `worktree_gc(maxAgeDays: 0)` exercises the age-based prune
+   in-session (`now` override for deterministic tests); `worktree_list` flags expired
+   entries with `*`. **Verified live:** dry-run flagged `wt/gc-age-probe2` ("expired and
+   merged"), run pruned its git worktree + registry entry; no-base-branch entry kept
+   (GC safety).
+4. **Topology** — `worktree_apply(noFF: true)` forces a merge commit via `--no-ff`;
+   default stays linear. (User smoke-tested both topologies in a scratch repo.)
+5. **Dead defaults removed** — `worktree_delete` requires `branch` (dropped
+   `getWorktreeForCwd`) and gained `commitPending: false` to discard changes instead of
+   snapshot-committing.
+6. **Divergence healed** — `worktree_list` reconciles with git on every call:
+   unregisters entries with no live git worktree, shows git-only worktrees as
+   `(unregistered)`. Verified: `main` appears as `(unregistered)`.
+7. **Conflict helper** — `worktree_resolve_conflicts(strategy: "ours" | "theirs" |
+   "abort")`; ours/theirs resolve + stage all conflicted files (merge stays pending,
+   finish with `git commit`), `abort` runs `git merge --abort`. (User smoke-tested.)
+
+Verification: user ran `tsc --noEmit` (clean for touched files; only pre-existing
+`get-project-id.ts` errors remain) and a scratch-repo smoke test (`/usr/tmp/opencode/wt-smoke.sh`,
+10 scenarios: linear vs `--no-ff` topology, `-d`/`-D` semantics, conflict resolution,
+pending-merge-until-commit, abort, porcelain parsing, ancestor checks). Independent
+confirmation in-session 2026-08-15: tool wiring, GC reports, age-path prune, list
+reconciliation, and `deleteBranch: auto` all verified live. README updated throughout.
+
 ---
 
 ## Phase 5 — Promotion to global (deferred until Phase 4 sign-off)

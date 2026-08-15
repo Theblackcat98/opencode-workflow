@@ -17,6 +17,11 @@ fallback path).
   `~/.config/opencode/plugins/` (`worktree.ts` + `worktree/` + `kdco-primitives/`);
   **no terminals are spawned** (work via bash + `worktree_apply`); repo config at
   `.opencode/worktree.jsonc`
+- Plugin extended 2026-08-15 (gap-fix round): `worktree_delete` gained `deleteBranch`
+  auto/always/never + `commitPending: false`; new `worktree_gc` tool (dry-run + `maxAgeDays`
+  override, runGc reports pruned/unregistered/kept-with-reasons); `worktree_apply` gained
+  `noFF`; `worktree_list` reconciles with git on every call (git-only worktrees shown as
+  `(unregistered)`, expired flagged `*`); new `worktree_resolve_conflicts` (ours/theirs/abort)
 
 ## Scenario checklist
 
@@ -32,7 +37,7 @@ fallback path).
 | 8 | Worktree (Termux risk) | Trigger `worktree_create` for an independent task. | Worktree created and isolated work completes, then merges back (now via the forked plugin's `worktree_apply`) | pass | Plugin forked and adapted by the user 2026-08-15 (Phase 4.5): **no terminals are spawned** — worktree work happens via bash/`worktree_apply`, which removes the Termux terminal-detection failure entirely. See scenarios 9–11 |
 | 9 | Worktree create on Termux | Trigger `worktree_create` for an independent task (forked plugin, no terminal). | Worktree created; isolated work completes via bash; no "No terminal emulator found" | pass | Verified 2026-08-15: `worktree_create` succeeded on Termux with zero terminal interaction; isolated commit made in the worktree and merged back (see S10) |
 | 10 | Merge-back (`worktree_apply`) | Work in a worktree (change + commit), then `worktree_apply` with `merge`; introduce an overlapping edit to force a conflict. | Changes merge into main; conflicts reported as a file list; no data loss | pass | Verified 2026-08-15: `worktree_apply` (merge) applied the worktree branch to main, reported `docs/s10-conflict-probe.md` as conflicted (both sides preserved in conflict markers), `validation.md` merged cleanly; conflict resolved by dropping the scratch probe |
-| 11 | Stale-worktree GC | Abandon a worktree (remove its git worktree manually), then trigger GC via a subsequent `worktree_create`. | Stale registry entry pruned automatically | pass | Verified 2026-08-15 (registry-cleanup path): `wt/gc-probe` removed via `git worktree remove`, then creating `wt/gc-trigger` ran GC before create and pruned the stale entry (absent from `worktree_list`). Age-based pruning (30 days + only-if-merged) verified in code (`runGc` on load/create/idle) — live aging needs a reload, not simulated |
+| 11 | Stale-worktree GC | Abandon a worktree (remove its git worktree manually), then trigger GC via a subsequent `worktree_create`. | Stale registry entry pruned automatically | pass | Verified 2026-08-15, **both paths**: (a) registry cleanup — `wt/gc-probe` removed via `git worktree remove`, then creating `wt/gc-trigger` ran GC before create and pruned the stale entry; (b) **age-based prune now tested in-session** via `worktree_gc(maxAgeDays: 0)` — dry-run flagged `wt/gc-age-probe2` as "expired and merged" (base branch recorded), run pruned its git worktree + registry entry; entry without a recorded base branch kept with reason (GC safety) |
 
 **Correction (2026-08-15):** scenario 5's original "expected" text ("no prompt on the feature-branch push") contradicts locked decision PLAN.md §3.4: **ask on ALL `git push*`**, so a bare `git push` cannot bypass the gate. Expected behavior is an `ask` prompt on every push, feature branch included.
 
@@ -53,7 +58,7 @@ scenarios 1–11 now pass (2026-08-15).
 | 8 Worktree (Termux risk) | pass | plugin forked/adapted 2026-08-15 — no terminal spawn (Phase 4.5); see scenarios 9–11 | 2026-08-15 |
 | 9 Worktree create on Termux | pass | none | 2026-08-15 |
 | 10 Merge-back (worktree_apply) | pass | none | 2026-08-15 |
-| 11 Stale-worktree GC | pass | age-based pruning path verified by code review; live aging not simulated in-session | 2026-08-15 |
+| 11 Stale-worktree GC | pass | both paths verified 2026-08-15: registry cleanup + age-based prune via `worktree_gc(maxAgeDays: 0)` | 2026-08-15 |
 
 **Promotion gate: all scenarios 1–11 pass as of 2026-08-15.**
 Phase 5 (promotion to global) is **explicitly deferred by user decision** — do not promote
