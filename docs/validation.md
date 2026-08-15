@@ -1,8 +1,8 @@
 # Phase 4 + 4.5 — Sandbox Validation
 
-Goal: prove the engineering loop end-to-end with zero risk before promoting
-anything to the global config. All scenarios run inside this repository
-against `sandbox/`.
+Goal: prove the engineering loop end-to-end with zero risk before the workflow
+is packaged as a copyable template (Phase 5 — no global promotion). All
+scenarios run inside this repository against `sandbox/`.
 
 Status legend: `pending` / `pass` / `fail` / `blocked` / `needs user` (verifiable only
 in a live interactive session) / `pass (fallback)` (scenario met via the documented
@@ -43,8 +43,8 @@ fallback path).
 
 ## Sign-off
 
-**Rule: no file is promoted to global until scenarios 1–7 pass** — all Phase 4/4.5
-scenarios 1–11 now pass (2026-08-15).
+**Rule: no file is packaged into the Phase 5 template until scenarios 1–7 pass** — all
+Phase 4/4.5 scenarios 1–11 now pass (2026-08-15).
 
 | Scenario | Status | Blocker / fix needed | Date |
 |---|---|---|---|
@@ -60,6 +60,6 @@ scenarios 1–11 now pass (2026-08-15).
 | 10 Merge-back (worktree_apply) | pass | none | 2026-08-15 |
 | 11 Stale-worktree GC | pass | both paths verified 2026-08-15: registry cleanup + age-based prune via `worktree_gc(maxAgeDays: 0)` | 2026-08-15 |
 
-**Promotion gate: all scenarios 1–11 pass as of 2026-08-15.**
-Phase 5 (promotion to global) is **explicitly deferred by user decision** — do not promote
-any file to `~/.config/opencode/` until the user approves.
+**Sign-off: all scenarios 1–11 pass as of 2026-08-15.**
+Phase 5 was re-scoped 2026-08-15: the goal is a **copyable template** (portability),
+not global promotion — nothing is promoted to `~/.config/opencode/`.

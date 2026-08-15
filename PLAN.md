@@ -4,12 +4,14 @@
 
 This plan builds a thin engineering-operating layer on top of opencode, scoped
 to this repository. It is the staging ground: everything here gets exercised,
-validated, and hardened **before** being promoted to the global config
-(`~/.config/opencode/`).
+validated, and hardened **before** being packaged into a self-contained
+template that can be copied into any folder or workspace. There is **no**
+promotion to the global config (`~/.config/opencode/`).
 
 **Status:** Phases 0–4 implemented and validated (2026-08-15); Phase 4.5 worktree-plugin
-fork complete (2026-08-15, see §4.5.5); **Phase 5 promotion to global is deferred by user
-decision — do not promote until explicitly approved.**
+fork complete (2026-08-15, see §4.5.5); **Phase 5 re-scoped (2026-08-15): portability —
+package the harness as a copyable template; no global promotion. Phase 6 (dynamic model
+routing) removed.**
 
 ---
 
@@ -31,7 +33,7 @@ user can delegate feature-level objectives to:
 |---|---|
 | opencode version | 1.18.18 (Termux/Android) |
 | `~/.config/opencode/opencode.jsonc` | Empty shell (`$schema` only) |
-| Worktree plugin | **Exists** — global `worktree.ts` + `kdco-primitives`, exposes `worktree_create` / `worktree_delete` tools with session forking |
+| Worktree plugin | **Exists** — global `worktree.ts` + `worktree/` + `kdco-primitives`, **forked & adapted 2026-08-15** (agent-centric, no terminal spawn); exposes `worktree_create` / `worktree_apply` / `worktree_delete` / `worktree_gc` / `worktree_resolve_conflicts`; still at the global path — moves into `.opencode/plugin/` in Phase 5 |
 | Agents | None configured (built-ins only: `build`, `plan`, `general`, `explore`, `scout`) |
 | Commands | None |
 | Skills | Global `skill-creator` only |
@@ -45,8 +47,8 @@ agent when to use it.
 
 1. **Lead agent:** create a new primary agent `lead` (do NOT override `build`).
    `build` stays as the escape hatch.
-2. **Scope:** project-scoped in this repo first. Promoted to global only after
-   validation (Phase 5).
+2. **Scope:** project-scoped in this repo first. Packaged as a copyable template
+   only after validation (Phase 5).
 3. **Models:** provider/model pinning deferred — providers are not confirmed.
    All agent files ship with `model:` unset (inherit defaults) and a documented
    routing table to fill in after `/connect`.
@@ -54,17 +56,19 @@ agent when to use it.
    2026-08-15 — a bare `git push` pushes the current branch to its upstream
    and would bypass branch-pattern gates). Destructive git operations are
    `ask`.
-5. **Dynamic model routing plugin:** deferred (Phase 6).
+5. **Dynamic model routing plugin:** not needed (2026-08-15) — dedicated agents
+   with static per-agent model routing suffice; Phase 6 removed.
 6. **No "read AGENTS.md" instructions** (2026-08-15): opencode auto-injects
    AGENTS.md into every session, including subagents. Agent prompts rely on
    the injected constitution instead of instructing agents to read it.
 7. **Fork the worktree plugin** (2026-08-15): the global worktree plugin is
    forked into this repo, adapted to the harness workflow (Termux terminal
    detection, `worktree_apply` merge-back, stale-worktree GC) and validated
-   in Phase 4.5 **before** it graduates to global in Phase 5.
+   in Phase 4.5 **before** it is packaged into the copyable template in Phase 5.
    > **Status (2026-08-15): DONE.** Fork implemented, active at the global path
    > `~/.config/opencode/plugins/` (edited in place by the user), and validated —
-   > see §4.5.5. It is not staged in `.opencode/plugin/` as originally sketched.
+   > see §4.5.5. It is not staged in `.opencode/plugin/` as originally sketched —
+   > the move into the repo is Phase 5 work (§5.3).
 
 ## 4. Target architecture
 
@@ -522,8 +526,8 @@ work in progress. No changes, no commits.
 
 ## Phase 4 — Sandbox validation (this repo)
 
-Goal: prove the loop end-to-end with zero risk before promoting anything
-global. All of Phase 4 is executed inside this repository.
+Goal: prove the loop end-to-end with zero risk before packaging the template
+(Phase 5). All of Phase 4 is executed inside this repository.
 
 ### 4.1 Files to add
 
@@ -593,8 +597,8 @@ global. All of Phase 4 is executed inside this repository.
 ### 4.4 Sign-off
 
 Each scenario gets a row in `docs/validation.md`: status (pass/fail/blocked),
-notes, and what to fix. **No file is promoted to global until scenarios 1–7
-pass.**
+notes, and what to fix. **No file is packaged into the Phase 5 template until
+scenarios 1–7 pass.**
 
 ---
 
@@ -602,8 +606,7 @@ pass.**
 
 The worktree plugin (global `~/.config/opencode/plugins/worktree.ts` +
 `worktree/` + `kdco-primitives/`) is forked into this repo, modified to fit
-the harness workflow, and validated — **before** it graduates to global in
-Phase 5.
+the harness workflow, and validated — **before** it is packaged in Phase 5.
 
 ### 4.5.1 Why
 
@@ -626,6 +629,9 @@ ours. Three issues surfaced during Phase 4 testing/research:
 
 Fork location: `.opencode/plugin/` (project-scoped auto-discovery). The
 global plugin remains untouched until the fork passes validation.
+**2026-08-15:** the fork currently runs at the global path (user-edited in place);
+moving it into `.opencode/plugin/` so the plugin travels with the template is
+Phase 5 work (§5.3).
 
 ### 4.5.2 Steps
 
@@ -673,15 +679,17 @@ global plugin remains untouched until the fork passes validation.
   `docs/validation.md` alongside scenarios 1–8.
 - `worktree_create`, `worktree_apply`, `worktree_delete` work from `lead`
   with the project-scoped fork (global copy disabled during testing).
-- Phase 5 graduates the **fork** to global only after this sign-off.
+- Phase 5 packages the **fork** (moved into `.opencode/plugin/`) into the copyable
+  template only after this sign-off.
 
 ### 4.5.5 Implementation status (2026-08-15) — DONE
 
 - **Steps 1–5 complete.** The fork lives at the **global** path
   `~/.config/opencode/plugins/` (`worktree.ts` + `worktree/` + `kdco-primitives/`),
   edited in place by the user — it was **not** staged in `.opencode/plugin/` as step 1
-  sketched. The pre-fork original is not backed up in this repo yet (Phase 5 adds
-  `vendor/`).
+  sketched. The pre-fork original is not backed up in this repo yet (Phase 5 vendors
+  the upstream original under `vendor/` and moves the fork into `.opencode/plugin/` —
+  see §5.3).
 - **Fix 1 implemented differently than sketched:** instead of a tmux fallback, the fork
   spawns **no terminals at all** — `worktree_create` registers the worktree, the agent
   works there via the bash tool (`workdir`) or delegated subagents, and `worktree_apply`
@@ -731,48 +739,66 @@ reconciliation, and `deleteBranch: auto` all verified live. README updated throu
 
 ---
 
-## Phase 5 — Promotion to global (deferred until Phase 4 sign-off)
+## Phase 5 — Portability: copy to any workspace (re-scoped 2026-08-15)
 
-Mechanical, not new work:
+The old goal — graduate the harness to `~/.config/opencode/` — is **dropped**.
+New goal: optimize this workflow so it can be **copied into any folder (or
+workspace)** and **adapted to other use cases**. Each workspace owns its harness
+as a template; nothing is promoted globally.
 
-| Source (this repo) | Destination (`~/.config/opencode/`) |
-|---|---|
-| `.opencode/agents/lead.md` etc. | `agents/` |
-| `opencode.json` permission block | merged into `opencode.json` |
-| `AGENTS.md` (harness constitution) | kept per-project as a template; global `AGENTS.md` gains only the environment/terminal notes |
-| `.opencode/commands/*.md` | `commands/` |
-| `.opencode/plugin/` (forked worktree plugin) | `plugins/` — replaces the original global `worktree.ts` + `worktree/` + `kdco-primitives/` (keep a backup of the original in this repo under `vendor/`) |
-| Model routing table (§5) | pinned `model:` fields in each agent |
-| `docs/validation.md` outcomes | recorded as the promotion record |
+### 5.1 Why re-scope
 
-`default_agent` is intentionally NOT promoted: `lead` becomes an option, not a
-mandate, for other projects.
+- Global promotion would make `lead` a de-facto mandate for every project on this
+  machine. A copyable template instead keeps the harness opt-in per workspace,
+  lets each project diverge freely, and keeps approval rules local.
+- The harness is already project-scoped (`opencode.json`, `.opencode/agents/`,
+  `.opencode/commands/`, AGENTS.md). The only non-portable piece is the worktree
+  plugin, which currently lives at the global path.
+- Dedicated agents with static per-agent model routing are sufficient — no dynamic
+  routing plugin (Phase 6 removed, see decision 5).
 
-**Status (2026-08-15):** Phase 4/4.5 sign-off is complete — all validation scenarios
-1–11 pass (`docs/validation.md`). **Promotion is explicitly deferred by the user: do not
-execute Phase 5 until approved.** When it runs, the fork at `~/.config/opencode/plugins/`
-is the artifact to graduate (back up the original under `vendor/` first).
+### 5.2 Copyability audit (2026-08-15)
 
----
+| Blocker | Detail | Fix |
+|---|---|---|
+| Plugin at global path | Fork lives at `~/.config/opencode/plugins/`; a copied workspace would get the unadapted upstream plugin (or none) | Move the fork into `.opencode/plugin/` (project-scoped auto-discovery) so it travels with the template; keep the global copy as the pre-existing fallback |
+| Plugin dependencies | `.opencode/package.json` pins `@opencode-ai/plugin` but is git-ignored (per-project install) | Document the `bun install` / `npm install` step in setup; lockfile stays out of the template |
+| Upstream attribution | Fork diverged from kdcokenny/opencode-worktree (MIT) with no in-repo copy of the original | Vendor the upstream original under `vendor/` for reference/diffing |
+| Sandbox is repo-specific | `sandbox/` is this repo's training project — irrelevant to other use cases | Keep it as the demo/validation example; the scenarios are reusable, the project is swappable (§5.3.4) |
+| Platform notes | AGENTS.md + lead.md carry Termux environment notes | Mark platform notes as adaptive (Termux vs desktop); the plugin spawns no terminals, so it is platform-neutral |
+| `default_agent: lead` | Copyable, but should remain a choice | Document opting out; a copied harness must never hijack an existing workspace's default |
 
-## Phase 6 — Deferred: dynamic model routing plugin
+### 5.3 Deliverables
 
-If static per-agent routing (Phase 5) proves insufficient, build a plugin in
-`.opencode/plugin/` (auto-discovered) that hooks `chat.params` to swap model
-IDs per agent/task type at runtime, and optionally `chat.headers` for
-provider/subscription selection. Sketch only — do not start before Phases
-1–4 are signed off.
+1. **Move the plugin into the repo:** copy `worktree.ts` + `worktree/` +
+   `kdco-primitives/` into `.opencode/plugin/` (project-scoped auto-discovery);
+   vendor the upstream original under `vendor/` for attribution; verify no duplicate
+   tool registration while the global copy still exists (disable or remove the global
+   one when the template is adopted).
+2. **Template manifest:** a documented file list — `AGENTS.md`, `opencode.json`,
+   `.opencode/` (agents, commands, plugin, worktree.jsonc, package.json for deps),
+   `docs/validation.md` (scenario checklist). Everything a new workspace needs.
+3. **Copy/setup script:** `scripts/init-harness.sh` (or a command) that copies the
+   manifest into a target directory and parameterizes the adaptive bits: project
+   name, model routing table (currently unset — inherits session/global model),
+   platform notes, permission rules.
+4. **Adaptation doc:** `docs/portability.md` — how to swap `sandbox/` for your own
+   project, re-run scenarios 1–11 against it, tune permissions, and opt out of
+   `default_agent`.
+5. **Exit criteria:** copy the manifest into a fresh empty directory, restart
+   opencode, and verify: agents present and citing AGENTS.md, `/feature` + `/ship`
+   route through `lead`, worktree tools available with no terminal spawn, scenarios
+   1–11 pass against a small substitute project.
 
-```ts
-import type { Plugin } from "@opencode-ai/plugin"
+### 5.4 Scope guardrails
 
-export default (async () => ({
-  "chat.params": async (input, output) => {
-    // map agent name -> model id, e.g.
-    // if (input.session.agent === "planner") output.model = "anthropic/claude-opus-4-5"
-  },
-})) satisfies Plugin
-```
+- No global config is touched in this phase (no promotion, ever — per §5.1).
+- The template is optional: a copied harness can be deleted with zero side effects
+  on other workspaces.
+- Model routing stays static per-agent (decision 5); Phase 6 is removed.
+
+**Status (2026-08-15):** plan updated; execution pending user go-ahead. Phase 4/4.5
+sign-off complete — all validation scenarios 1–11 pass (`docs/validation.md`).
 
 ---
 
@@ -785,9 +811,9 @@ export default (async () => ({
 5. Phase 4: build sandbox, run scenarios 1–8, sign off in `docs/validation.md`.
 6. Phase 4.5: fork + adapt the worktree plugin (Termux fix, `worktree_apply`,
    GC) → validate scenarios 9–11, sign off.
-7. Phase 5: promote to global (only after Phase 4 + 4.5 sign-off). Sign-off achieved
-   2026-08-15; **execution deferred by user decision — awaiting approval**.
-8. Phase 6: dynamic routing (only if needed).
+7. Phase 5: package the harness as a copyable template for any workspace
+   (re-scoped 2026-08-15 — no global promotion; Phase 6 removed). Phase 4 + 4.5
+   sign-off achieved 2026-08-15; execution pending user go-ahead.
 
 ## Appendix B — Config change reminder
 
