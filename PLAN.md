@@ -7,7 +7,9 @@ to this repository. It is the staging ground: everything here gets exercised,
 validated, and hardened **before** being promoted to the global config
 (`~/.config/opencode/`).
 
-**Status:** plan only — nothing below is implemented yet.
+**Status:** Phases 0–4 implemented and validated (2026-08-15); Phase 4.5 worktree-plugin
+fork complete (2026-08-15, see §4.5.5); **Phase 5 promotion to global is deferred by user
+decision — do not promote until explicitly approved.**
 
 ---
 
@@ -60,6 +62,9 @@ agent when to use it.
    forked into this repo, adapted to the harness workflow (Termux terminal
    detection, `worktree_apply` merge-back, stale-worktree GC) and validated
    in Phase 4.5 **before** it graduates to global in Phase 5.
+   > **Status (2026-08-15): DONE.** Fork implemented, active at the global path
+   > `~/.config/opencode/plugins/` (edited in place by the user), and validated —
+   > see §4.5.5. It is not staged in `.opencode/plugin/` as originally sketched.
 
 ## 4. Target architecture
 
@@ -580,6 +585,10 @@ global. All of Phase 4 is executed inside this repository.
    not be supported (cmux/terminal detection). If it fails, record the failure
    in `docs/validation.md` and fall back to plain `git worktree add` via bash
    until the plugin is adapted. Do not let this block Phases 1–3.
+   > **Resolved 2026-08-15 (Phase 4.5):** the plugin was forked & adapted — it
+   > spawns **no terminals at all** (work happens via bash + `worktree_apply`),
+   > removing the Termux terminal-detection failure entirely. Scenario 8 passed;
+   > see `docs/validation.md`.
 
 ### 4.4 Sign-off
 
@@ -666,6 +675,25 @@ global plugin remains untouched until the fork passes validation.
   with the project-scoped fork (global copy disabled during testing).
 - Phase 5 graduates the **fork** to global only after this sign-off.
 
+### 4.5.5 Implementation status (2026-08-15) — DONE
+
+- **Steps 1–5 complete.** The fork lives at the **global** path
+  `~/.config/opencode/plugins/` (`worktree.ts` + `worktree/` + `kdco-primitives/`),
+  edited in place by the user — it was **not** staged in `.opencode/plugin/` as step 1
+  sketched. The pre-fork original is not backed up in this repo yet (Phase 5 adds
+  `vendor/`).
+- **Fix 1 implemented differently than sketched:** instead of a tmux fallback, the fork
+  spawns **no terminals at all** — `worktree_create` registers the worktree, the agent
+  works there via the bash tool (`workdir`) or delegated subagents, and `worktree_apply`
+  merges back. This removes the Termux terminal-detection problem entirely (no
+  "No terminal emulator found").
+- **Fix 2 done:** `worktree_apply` tool with `merge` / `overwrite` modes and a conflict
+  file-list report.
+- **Fix 3 done:** `runGc` on plugin load, before create, and on session idle — registry
+  cleanup for entries whose worktree no longer exists + age-based pruning (default
+  `maxAgeDays: 30`, `onlyIfMerged`, never prunes without a recorded base branch).
+- **Step 6 done:** scenarios 9–11 ran and passed — results in `docs/validation.md`.
+
 ---
 
 ## Phase 5 — Promotion to global (deferred until Phase 4 sign-off)
@@ -684,6 +712,11 @@ Mechanical, not new work:
 
 `default_agent` is intentionally NOT promoted: `lead` becomes an option, not a
 mandate, for other projects.
+
+**Status (2026-08-15):** Phase 4/4.5 sign-off is complete — all validation scenarios
+1–11 pass (`docs/validation.md`). **Promotion is explicitly deferred by the user: do not
+execute Phase 5 until approved.** When it runs, the fork at `~/.config/opencode/plugins/`
+is the artifact to graduate (back up the original under `vendor/` first).
 
 ---
 
@@ -717,7 +750,8 @@ export default (async () => ({
 5. Phase 4: build sandbox, run scenarios 1–8, sign off in `docs/validation.md`.
 6. Phase 4.5: fork + adapt the worktree plugin (Termux fix, `worktree_apply`,
    GC) → validate scenarios 9–11, sign off.
-7. Phase 5: promote to global (only after Phase 4 + 4.5 sign-off).
+7. Phase 5: promote to global (only after Phase 4 + 4.5 sign-off). Sign-off achieved
+   2026-08-15; **execution deferred by user decision — awaiting approval**.
 8. Phase 6: dynamic routing (only if needed).
 
 ## Appendix B — Config change reminder
