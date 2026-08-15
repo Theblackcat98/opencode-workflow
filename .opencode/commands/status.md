@@ -1,7 +1,7 @@
 ---
-description: Summarize current repo and git state.
+description: Summarize current repo and git state, including worktrees.
 agent: lead
 ---
 
-Report briefly: current branch, uncommitted changes, recent commits, and any
-work in progress. No changes, no commits.
+Report briefly: current branch, uncommitted changes, recent commits, work in
+progress, and worktree state (`worktree_list`). No changes, no commits.

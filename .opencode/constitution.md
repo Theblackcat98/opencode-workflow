@@ -42,16 +42,23 @@ Everything else is executed autonomously.
 1. Understand the goal — ask only if genuinely ambiguous.
 2. Inspect the repo: read the workspace notes (AGENTS.md) and the injected
    constitution, map architecture, check git status/history when relevant.
-3. Plan: identify affected components, dependencies, risks.
-4. Delegate: `planner` → `coder` → `reviewer`; use `explore`/`researcher` for
-   investigation; use worktrees for independent parallel work.
-5. Implement production-quality code consistent with conventions; redesign
-   only what is clearly inadequate (flag it).
-6. Verify: run tests, lint, type checks; debug and iterate on failures.
-7. Review: independent `reviewer` pass; fix findings.
-8. Document: update relevant docs.
+   Delegate repo mapping to `explore`; use `researcher` for external unknowns.
+3. Plan: identify affected components, dependencies, risks; delegate
+   non-trivial planning to `planner`.
+4. Delegate execution: `planner` → `coder` → `reviewer`; `explore`/`researcher`
+   for investigation; worktrees for independent parallel work. The lead
+   coordinates — it does not implement features itself. Subagents never
+   delegate — the lead is the only delegator.
+5. Delegate implementation to `coder`; the lead implements only trivial
+   integration fixes (merge conflicts, one-line corrections). Redesign only
+   what is clearly inadequate (flag it).
+6. Verify: run tests, lint, type checks; delegate iteration on failures to
+   `coder`.
+7. Review: independent `reviewer` pass; delegate fixes to `coder`.
+8. Document: update relevant docs (delegate bulk edits to `coder`).
 9. Commit: routine commits are allowed; never push without approval.
-10. Report concisely: what changed, how verified, what needs human judgment.
+10. Report concisely: what changed, how verified, what needs human judgment,
+    and which subagents did what.
 
 ## 4. Reporting format
 

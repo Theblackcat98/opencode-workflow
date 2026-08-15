@@ -754,6 +754,9 @@ Phase 5 work (§5.3).
   frontmatter files define `permission.task`, so subagents cannot delegate regardless
   of prompt text; the missing piece is prompt-text polish only. Open item; fold into
   Phase 5 or a quick follow-up edit.
+  > **RESOLVED 2026-08-15 (Phase 4.6):** the flat-delegation rule is now written into
+  > `lead.md` ("Subagents never delegate — you are the only delegator") and
+  > `constitution.md` §3 step 4.
 
 ### 4.5.6 Gap-fix round (2026-08-15) — DONE
 
@@ -864,7 +867,12 @@ never mention worktrees, parallel delegation, or the plan/review checkpoints.
 - Scenarios 13–16 pass and are recorded in `docs/validation.md`.
 - Phase 5 (portability) then packages the hardened workflow.
 
-**Status (2026-08-15):** planned — implementation pending user go-ahead.
+**Status (2026-08-15):** prompt-text portion **implemented** — commands rewritten
+(delegation-first, subagent instructions), subagent final-message sections added,
+`lead.md` coordination section, constitution §3 delegation-first + flat-delegation
+rule. **Still pending user decision:** structural enforcement (deny `edit`/
+`webfetch`/`websearch` to `lead`), the new commands (`/plan`, `/review`,
+`/worktree`), and validation scenarios 13–16.
 
 ---
 

@@ -60,14 +60,14 @@ own instructions.
 `lead` runs this loop for every feature-level request:
 
 ```
- 1. Understand ──► 2. Inspect ──► 3. Plan ──► 4. Delegate ──► 5. Implement
-     the goal        the repo      (components,   (planner → coder →   (production
-     (ask only if     (architecture,  deps, risks)   reviewer; parallel   quality,
-      ambiguous)      git state)                     when independent;    conventions)
-                                                     worktrees for
+ 1. Understand ──► 2. Inspect ──► 3. Plan ──► 4. Delegate ──► 5. Execute
+     the goal        the repo      (components,   (planner → coder →   (subagents
+     (ask only if     (architecture,  deps, risks)   reviewer; parallel   implement;
+      ambiguous)      git state)                     when independent;    lead
+                                                     worktrees for        coordinates)
                                                      isolation)
-                                                           │
-                                                           ▼
+                                                            │
+                                                            ▼
  10. Report ◄── 9. Commit ◄── 8. Document ◄── 7. Review ◄── 6. Verify
  (Done/Verified/   (routine,        (update docs)   (independent   (tests, lint,
   Decisions/       NEVER push)                       reviewer pass) type checks)
@@ -79,6 +79,24 @@ to protected branches, destructive git/DB operations, security/auth changes,
 secrets, major new dependencies, architecture changes, and substantial
 deviations from the request. Everything else runs autonomously.
 
+## Delegation & coordination
+
+The lead is an **orchestrator, not an implementer** — it delegates execution
+to subagents and coordinates from their reports. Each subagent's final
+message is shaped for the lead's next decision:
+
+| Work | Subagent | Returns to the lead |
+|---|---|---|
+| Codebase lookup | `explore` | concise answer to the question |
+| External research | `researcher` | answer, evidence (citations), recommendation, unresolved items |
+| Architecture / planning | `planner` | complete plan — handed to `coder` as the implementation brief |
+| Implementation + tests | `coder` | what changed, verification results, deviations, reviewer focus |
+| Independent review | `reviewer` | verdict (approve / needs fixes), prioritized findings, recommendation |
+
+Subagents never delegate — the lead is the only delegator. Independent tasks
+run in parallel worktrees: one worktree per task, one `coder` per worktree,
+merged back with `worktree_apply`.
+
 ## Agents
 
 All agents live in `.opencode/agents/`. `lead` is the primary agent (the
@@ -87,7 +105,7 @@ default when opencode starts in this repo); the rest are subagents that only
 
 | Agent | Mode | Role | Access |
 |---|---|---|---|
-| **`lead`** | primary | Orchestrator. Takes feature-level objectives, runs the full loop, delegates, verifies, commits. | `task`: only `planner`, `coder`, `reviewer`, `researcher`, `explore` (all else denied). `bash`: everything allowed **except** `git push*`, `git reset --hard*`, `git branch -D*`, `git clean -f*`, `git push --force*`, `rm -rf*` → **ask** |
+| **`lead`** | primary | Orchestrator. Takes feature-level objectives, runs the loop by delegating execution to subagents, coordinates from their reports, verifies, commits. | `task`: only `planner`, `coder`, `reviewer`, `researcher`, `explore` (all else denied). `bash`: everything allowed **except** `git push*`, `git reset --hard*`, `git branch -D*`, `git clean -f*`, `git push --force*`, `rm -rf*` → **ask** |
 | **`planner`** | subagent | Architecture & planning. Maps the codebase, produces file-level implementation plans with tests and risks. | Read-only: `edit` denied; `bash` mostly **ask**, with `git status/log/diff/show/branch` + `ls` allowed; `webfetch` allowed |
 | **`coder`** | subagent | Implementation. Writes production-quality code, runs tests/lint, iterates until green. | Full `bash` access **except** `git push*`, `git reset --hard*`, `git clean -f*`, `git branch -D*` → **deny** |
 | **`reviewer`** | subagent | Independent review. Reads the diff with fresh eyes, checks correctness/security/regressions, runs tests itself. | Read-only: `edit` denied; `bash` mostly **ask**, with git read commands + test/lint runners (`npm test*`, `pytest*`, `python3 -m unittest*`, `go test*`, `cargo test*`, …) + `ls` allowed |
@@ -110,9 +128,9 @@ User-facing entry points, all routed to `lead`:
 
 | Command | Purpose |
 |---|---|
-| `/feature <request>` | Start a feature-level request: "Add user authentication using OAuth…". `lead` takes full ownership of the loop and reports back concisely. |
-| `/ship` | Close out current work: full test suite + lint + type checks, fix failures, independent reviewer pass, update docs, create routine commits. **Never pushes.** |
-| `/status` | Brief repo/git state: current branch, uncommitted changes, recent commits, work in progress. |
+| `/feature <request>` | Start a feature-level request: "Add user authentication using OAuth…". Delegation-first: `lead` coordinates; `explore`/`planner`/`coder`/`reviewer`/`researcher` execute; independent tasks run in parallel worktrees. |
+| `/ship` | Close out current work: apply pending worktrees, verify, review (`explore` state check + `reviewer` pass + `coder` fixes), update docs, create routine commits. **Never pushes.** |
+| `/status` | Brief repo/git state: current branch, uncommitted changes, recent commits, work in progress, worktree state. |
 
 ## Worktree plugin (parallel isolation)
 
