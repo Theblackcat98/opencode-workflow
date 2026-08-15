@@ -25,4 +25,3 @@ python3 -m unittest discover -s sandbox
 ## Roadmap (training features)
 
 - Fahrenheit mode across display and sensor/thermostat
-- Caching of heating decisions (intentionally conflicts with tests)

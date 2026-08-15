@@ -14,9 +14,22 @@ class Thermostat:
         self.setpoint = setpoint
         self.hysteresis = hysteresis
         self._heating = False
+        self._cache = {}
 
     def update(self, current):
-        """Feed the current temperature; return whether heating should run."""
+        """Feed the current temperature; return whether heating should run.
+
+        Consecutive identical readings reuse the last decision instead of
+        recomputing; the cache is invalidated when the setpoint changes.
+        """
+        if current in self._cache:
+            return self._cache[current]
+        decision = self._decide(current)
+        self._cache = {current: decision}
+        return decision
+
+    def _decide(self, current):
+        """Compute the heating decision for a reading from scratch."""
         if current <= self.setpoint - self.hysteresis:
             self._heating = True
         elif current >= self.setpoint + self.hysteresis:
@@ -26,3 +39,4 @@ class Thermostat:
     def set_temperature(self, value):
         """Change the setpoint, clamped to [0, 40] Celsius."""
         self.setpoint = clamp(value, 0.0, 40.0)
+        self._cache.clear()

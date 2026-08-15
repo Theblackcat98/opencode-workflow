@@ -47,3 +47,35 @@ class ThermostatTests(unittest.TestCase):
         t = Thermostat()
         t.set_temperature(100.0)
         self.assertEqual(t.setpoint, 40.0)
+
+
+class CachingThermostat(Thermostat):
+    """A thermostat that counts decision recomputations."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.recomputations = 0
+
+    def _decide(self, current):
+        self.recomputations += 1
+        return super()._decide(current)
+
+
+class ThermostatCacheTests(unittest.TestCase):
+    """Caching of identical readings."""
+
+    def test_repeated_reading_avoids_recomputation(self):
+        t = CachingThermostat(setpoint=20.0, hysteresis=0.5)
+        t.update(19.4)
+        t.update(19.4)
+        t.update(19.4)
+        self.assertEqual(t.recomputations, 1)
+
+    def test_setpoint_change_invalidates_cache(self):
+        t = CachingThermostat(setpoint=20.0, hysteresis=0.5)
+        self.assertTrue(t.update(19.4))
+        t.set_temperature(30.0)
+        self.assertTrue(t.update(19.4))
+        t.set_temperature(18.0)
+        self.assertFalse(t.update(19.4))
+        self.assertEqual(t.recomputations, 3)
