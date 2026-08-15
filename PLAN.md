@@ -8,11 +8,13 @@ validated, and hardened **before** being packaged into a self-contained
 template that can be copied into any folder or workspace. There is **no**
 promotion to the global config (`~/.config/opencode/`).
 
-**Status:** Phases 0–4 implemented and validated (2026-08-15); Phase 4.5 worktree-plugin
-fork complete (2026-08-15, see §4.5.5); **Phase 5 re-scoped (2026-08-15): portability —
-package the harness as a copyable template; no global promotion. Phase 6 (dynamic model
-routing) removed.** Constitution migrated to `.opencode/constitution.md` (injected via
-`instructions`; AGENTS.md = workspace notes only) — 2026-08-15, see decision 8.
+**Status:** Phases 0–4.5 implemented and validated (2026-08-15) — scaffold, git init,
+constitution, agent team, commands, sandbox validation (scenarios 1–8), and the worktree
+plugin fork + gap-fix round (scenarios 9–11) are all complete; see the per-phase status
+notes below. **Phase 5 (portability — copyable template, no global promotion) is the only
+remaining phase: planned, not started.** Phase 6 (dynamic model routing) removed.
+Constitution migrated to `.opencode/constitution.md` (injected via `instructions`;
+AGENTS.md = workspace notes only) — 2026-08-15, see decision 8.
 
 ---
 
@@ -197,11 +199,17 @@ Rules to remember:
 agent is still `build` until Phase 2 adds `lead`); any `git push` prompts;
 non-push git (status/diff/commit/branch/worktree) does not.
 
+> **Status (2026-08-15): DONE.** `opencode.json` + `.gitignore` in place; `git push*`
+> prompts verified live (scenario 5); non-push git does not prompt.
+
 ## Phase 0.5 — Git init
 
 Run `git init` in this folder and make an initial commit of `PLAN.md`,
 `RESEARCH-grok-build.md`, and the Phase 0 files. Without a git repo the
 worktree plugin and Phase 4 scenarios cannot run.
+
+> **Status (2026-08-15): DONE.** Repo initialized; commit history now spans
+> Phases 0–4.5.
 
 ---
 
@@ -274,6 +282,10 @@ Every completed task ends with a short report:
 **Acceptance:** run `opencode` here and ask any agent "what are your
 constraints?" — the agent should recite the division of responsibility and
 approval boundary.
+
+> **Status (2026-08-15): DONE.** Constitution lives at `.opencode/constitution.md`,
+> injected via `instructions` (decision 8); AGENTS.md trimmed to workspace notes.
+> Scenario 12 (recitation after a restart) is applied and pending live verification.
 
 ---
 
@@ -482,6 +494,9 @@ frontmatter per the table in §5 once providers are connected.
   for the user, but `lead`'s task tool denies delegations outside the allowlist.
 - `planner`/`reviewer`/`researcher` cannot edit; `coder` cannot push.
 
+> **Status (2026-08-15): DONE.** All five agents in `.opencode/agents/`;
+> `"default_agent": "lead"` set; roles/permissions exercised by scenarios 1–7.
+
 ---
 
 ## Phase 3 — Feature-level commands
@@ -536,6 +551,9 @@ work in progress. No changes, no commits.
 
 **Acceptance:** `/feature` and `/ship` work from this repo; commands route to
 `lead`; `$ARGUMENTS` passes through verbatim.
+
+> **Status (2026-08-15): DONE.** `feature.md`, `ship.md`, `status.md` in
+> `.opencode/commands/`; routing through `lead` exercised by scenarios 2–7.
 
 ---
 
@@ -614,6 +632,9 @@ Goal: prove the loop end-to-end with zero risk before packaging the template
 Each scenario gets a row in `docs/validation.md`: status (pass/fail/blocked),
 notes, and what to fix. **No file is packaged into the Phase 5 template until
 scenarios 1–7 pass.**
+
+> **Status (2026-08-15): DONE.** Sandbox + `docs/validation.md` in place; scenarios
+> 1–8 pass (sign-off table in `docs/validation.md`).
 
 ---
 
@@ -716,6 +737,14 @@ Phase 5 work (§5.3).
   cleanup for entries whose worktree no longer exists + age-based pruning (default
   `maxAgeDays: 30`, `onlyIfMerged`, never prunes without a recorded base branch).
 - **Step 6 done:** scenarios 9–11 ran and passed — results in `docs/validation.md`.
+- **Correction (2026-08-15):** step 5's "flat delegation — subagents never delegate"
+  rule (grok's depth limit = 1; RESEARCH-grok-build.md §1.4, adoption in §4) is **not
+  yet written into `lead.md`/`.opencode/constitution.md`** — the parallel-delegation
+  and `worktree_apply` conventions are present, the flat-delegation rule is not.
+  Note: the rule is already **structurally enforced** — none of the subagent
+  frontmatter files define `permission.task`, so subagents cannot delegate regardless
+  of prompt text; the missing piece is prompt-text polish only. Open item; fold into
+  Phase 5 or a quick follow-up edit.
 
 ### 4.5.6 Gap-fix round (2026-08-15) — DONE
 
@@ -815,24 +844,26 @@ as a template; nothing is promoted globally.
   on other workspaces.
 - Model routing stays static per-agent (decision 5); Phase 6 is removed.
 
-**Status (2026-08-15):** plan updated; execution pending user go-ahead. Phase 4/4.5
-sign-off complete — all validation scenarios 1–11 pass (`docs/validation.md`).
+**Status (2026-08-15):** plan updated; execution pending user go-ahead — this is the
+**only remaining phase**. Phase 4/4.5 sign-off complete — all validation scenarios
+1–11 pass (`docs/validation.md`).
 
 ---
 
 ## Appendix A — Execution order summary
 
-1. Phase 0: scaffold repo (`opencode.json`, `.gitignore`) → restart opencode.
-2. Phase 1: write the harness constitution (now `.opencode/constitution.md`,
-   injected via `instructions`; originally `AGENTS.md`) → verify agents cite it.
-3. Phase 2: create the five agent files → verify roles/permissions.
-4. Phase 3: create the three commands → verify routing.
-5. Phase 4: build sandbox, run scenarios 1–8, sign off in `docs/validation.md`.
-6. Phase 4.5: fork + adapt the worktree plugin (Termux fix, `worktree_apply`,
+1. **DONE** — Phase 0: scaffold repo (`opencode.json`, `.gitignore`) → restart opencode.
+2. **DONE** — Phase 1: write the harness constitution (now `.opencode/constitution.md`,
+   injected via `instructions`; originally `AGENTS.md`) → verify agents cite it
+   (scenario 12 recitation pending a restarted session).
+3. **DONE** — Phase 2: create the five agent files → verify roles/permissions.
+4. **DONE** — Phase 3: create the three commands → verify routing.
+5. **DONE** — Phase 4: build sandbox, run scenarios 1–8, sign off in `docs/validation.md`.
+6. **DONE** — Phase 4.5: fork + adapt the worktree plugin (Termux fix, `worktree_apply`,
    GC) → validate scenarios 9–11, sign off.
-7. Phase 5: package the harness as a copyable template for any workspace
-   (re-scoped 2026-08-15 — no global promotion; Phase 6 removed). Phase 4 + 4.5
-   sign-off achieved 2026-08-15; execution pending user go-ahead.
+7. **PENDING** — Phase 5: package the harness as a copyable template for any workspace
+   (re-scoped 2026-08-15 — no global promotion; Phase 6 removed). Only remaining
+   phase; execution pending user go-ahead.
 
 ## Appendix B — Config change reminder
 
