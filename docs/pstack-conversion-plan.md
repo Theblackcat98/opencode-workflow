@@ -275,3 +275,23 @@ changes). `typescript-best-practices` keeps `references/patterns.md`, drops
 4. `skills: convert setup-pstack; record not-portable verdicts` — Tier 3 +
    verdict README.
 5. `docs: conversion notes + validation results` — after validation pass.
+
+## 8. Conversion verdicts
+
+Recorded 2026-10-10 on completion of Tier 3.
+
+- **Converted: 50 skills + 2 agents.** All 51 upstream skills except
+  `make-bot-ui` → `.opencode/skills/<id>/`; `poteto-agent` and
+  `comment-sicko` → `.opencode/agents/`. `plugin/pstack/` untouched as the
+  upstream reference.
+- **Explicitly not ported:**
+  - `make-bot-ui` — Cursor Automations webhooks (Tailscale bot setup);
+    no opencode equivalent. No `.opencode/skills/make-bot-ui/` created.
+  - `automations/benny/` — Cursor Automations pack; kept vendored only.
+  - `docs/guide/` (10 chapters) — kept vendored as historical reference
+    (written against Cursor UI).
+  - `.cursor-plugin/plugin.json` — dropped; opencode discovers
+    skills/agents via fixed directories, no manifest to map to.
+- **Upstream pin:** `cursor/plugins`, pstack v0.15.15 (MIT).
+- No README added under `.opencode/skills/` (a root `*.md` there would be
+  discovered as a skill).
