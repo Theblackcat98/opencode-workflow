@@ -48,9 +48,9 @@ untouched as the upstream reference.
     └── …
 ```
 
-- **No `opencode.json` changes required.** `.opencode/skills` and
-  `.opencode/agents` are auto-discovered in V2. Optional later addition: an
-  `instructions` entry for the model-map file (§5.4).
+- **No `opencode.json` changes required** (decided: leave V2 migration
+  out — §6.5). `.opencode/skills` and `.opencode/agents` are auto-discovered
+  in V2.
 - Scripts stay **beside their SKILL.md** (relative paths are part of the skill
   contract; opencode passes the skill's base directory + file sample to the
   agent).
@@ -67,42 +67,39 @@ compatible semantics**: the skill is hidden from the model's discovery
 list but still loadable by exact ID. That is exactly pstack's design:
 `poteto-mode` routes, everything else is loaded by the router.
 
-**Recommendation:** REMOVE the field from `poteto-mode` + `poteto-help`
-during conversion (making them discoverable entry points alongside
-`setup-pstack`), and KEEP it on the other 48 sub-skills. Alternative
-(flip all to discoverable) floods every step's context with 51 skill
-descriptions and abandons the router design. A conversion-time
-consideration (not the recommendation): a thin
-`.opencode/commands/poteto-mode.md` wrapper could offer an explicit
-user-invokable entry point in addition to the discoverable skill.
+**Decided (human, 2026-10-10): keep pstack's visibility setup exactly as
+shipped.** All 50 skills keep `disable-model-invocation: true` as-is —
+including `poteto-mode` and `poteto-help`, which stay hidden from discovery
+and are reached by explicit user invocation (`@poteto-mode` /
+`@poteto-help`, or the skill tool by exact ID), just as `/poteto-mode` is
+explicit in Cursor. Only `setup-pstack` (which never had the field) is
+discoverable. Final state: 50 hidden / 1 visible. A conversion-time
+consideration (not decided): a thin `.opencode/commands/poteto-mode.md`
+wrapper could offer an explicit user-invokable entry point.
 
-### D2 — Models: neutralize dynamic model routing (charter compliance)
+### D2 — Models: roles inherit the current model (decided)
 
-`.opencode/CHARTER.md`: *"Not a model router. Per-agent models stay static."*
 pstack hardcodes Cursor slugs (`claude-opus-5-5-xhigh`, `grok-4.7-xhigh-fast`)
 in 9 skills + 6 playbooks, selected per-role at spawn time.
 
-**Recommendation (a): neutralize.** Role→model tables become role→*agent*
-guidance: "spawn a subagent; use the session model or the harness agents
-(`explore`/`coder`/`reviewer`) where they fit." Drop all Cursor model slugs.
-The effort-ladder prose (`max > xhigh > high …`) survives only as "prefer a
-higher-reasoning variant when the provider offers one" where it matters.
-
-- (b) Keep tables as an opt-in, user-filled reference file (see D3) — more
-  faithful, but contradicts the charter as written.
-- (c) Amend the charter — a human decision; out of scope for this plan.
-
-**Flag for the human:** if you want pstack's real two-model routing, that is
-decision (b)/(c), not (a).
+**Decided (human, 2026-10-10): the harness charter does not constrain plugin
+content — roles inherit whatever model is currently selected.** Conversion
+drops all Cursor model slugs and role→model tables; spawn instructions say
+"spawn a subagent, which inherits the session model" (opencode subagents
+inherit the parent model when none is configured). The effort-ladder prose
+(`max > xhigh > high …`) survives only as "prefer a higher-reasoning variant
+when the provider offers one" where it matters. D3's model-map file is
+accordingly downgraded: `setup-pstack` no longer writes role→model config.
 
 ### D3 — `~/.cursor/rules/pstack-models.mdc` replacement
 
 `setup-pstack` writes a Cursor always-apply rules file; 9+ consumers read
-role lines from it. **Recommendation:** replace with a repo-local
-`.opencode/pstack-models.md` (role → `provider/model#variant`, user-filled or
-left at "inherit"). Consumers read it as a reference file. Add it to
-`instructions` in `opencode.json` **only** if the human wants it always in
-context — default: no (charter: no model router).
+role lines from it. **Superseded by the D2 decision (roles inherit the
+session model): no model-map file.** `setup-pstack` shrinks to environment
+orientation only (reasoning budget, which models this opencode install
+offers, optional chaining to `/create-verification-skill`); it writes no
+config. Delete all "read your role line from pstack-models.mdc" consumer
+instructions along with the slugs (D2).
 
 ### D4 — `/skill-name` references → opencode invocation idiom
 
@@ -135,7 +132,7 @@ contract needed.
 
 | Cursor path | opencode treatment |
 |---|---|
-| `~/.cursor/rules/pstack-models.mdc` | `.opencode/pstack-models.md` (D3) |
+| `~/.cursor/rules/pstack-models.mdc` | No equivalent (D3 superseded by D2): delete consumer read-instructions with the slugs. |
 | `~/.cursor/projects/*/agent-transcripts/*.jsonl` (`recall`, `reflect`, `worktree-audit.sh`) | Degrade: point at `~/.local/share/opencode/` with a "layout may differ by version; discover at runtime" note. Skills already degrade gracefully ("no data" is a valid finding). |
 | `.cursor/skills/verify-<app>/` (`create-/maintain-verification-skill`) | `.opencode/skills/verify-<app>/` |
 
@@ -145,7 +142,7 @@ contract needed.
 |---|---|
 | `name` | Keep (display label only; ID is path-derived). |
 | `description` | Keep. Rewrite any `/slash` self-reference per D4. |
-| `disable-model-invocation: true` | **Keep** on the 48 sub-skills (D1). Valid V2 field. |
+| `disable-model-invocation: true` | **Keep** on all 50 skills that carry it (D1 decided: 50 hidden / 1 visible). Valid V2 field. |
 | `paths` (typescript-best-practices) | Drop (Cursor glob-gating; opencode has no equivalent). |
 | `mode`, `icon`, `color`, `reminder` (poteto-mode) | Drop. Fold `reminder` text into the description or body top. |
 | `license` / `metadata` | None present; optional add: `license: MIT` from plugin.json. |
@@ -218,11 +215,11 @@ changes). `typescript-best-practices` keeps `references/patterns.md`, drops
 
 ### Tier 3 — deep Cursor coupling (2 skills + verdicts, effort: S–M)
 
-- **`setup-pstack`**: deepest rewrite. Writes `.opencode/pstack-models.md`
-  instead of Cursor rules (D3); model enumeration becomes
-  "models available to this opencode install" (provider config / `/models`);
-  drops Cursor models-API probing. Under D2(a) the whole skill shrinks to
-  optional: it only fills the reference file.
+- **`setup-pstack`**: deepest rewrite. Writes no config (D3 superseded by
+  D2); model enumeration becomes "models available to this opencode
+  install" (provider config / `/models`); drops Cursor models-API probing.
+  The skill shrinks to optional environment orientation (reasoning budget,
+  chaining to the verification-skill flow).
 - **`make-bot-ui`**: **verdict: not portable** (Cursor Automations webhooks,
   Tailscale bot setup). Keep vendored; exclude from `.opencode/skills`.
 - Post-conversion README note in this repo listing verdicts + upstream pin.
@@ -252,23 +249,21 @@ changes). `typescript-best-practices` keeps `references/patterns.md`, drops
 6. **Diff discipline:** `diff -r plugin/pstack <upstream>` unchanged —
    converted copies only; vendored tree never edited.
 
-## 6. Risks & open questions for the human
+## 6. Risks & decided questions (human answers, 2026-10-10)
 
-1. **Charter tension (D2)** — do you want (a) neutralized model routing
-   [recommended, charter-compliant], (b) opt-in user-filled role→model file,
-   or (c) a charter amendment to allow static role→model mapping?
-2. **Router visibility (D1)** — keep pstack's 48-hidden/3-visible router
-   pattern [recommended], or make all 51 discoverable?
-3. **Pruning** — 51 skills is a lot of surface. After conversion, consider
-   excluding Cursor-lifestyle skills you won't use (`make-bot-ui` is already
-   excluded; `automate-me`, `recall` are degraded). Prune now or convert-all
-   then prune?
+1. **Models (D2) — decided: roles inherit the current model.** The harness
+   charter does not constrain plugin content. Drop all Cursor slugs/tables;
+   subagents inherit the session model.
+2. **Router visibility (D1) — decided: keep pstack's setup exactly.**
+   50 hidden / 1 visible (`setup-pstack`); `poteto-mode` + `poteto-help`
+   stay hidden, reached by explicit invocation.
+3. **Pruning — decided: convert all, prune later.** (`make-bot-ui` already
+   excluded as not portable; `automate-me`, `recall` convert degraded.)
 4. **Upstream drift** — vendored at v0.15.15 today; a re-vendor later will
    conflict with converted copies. Accept manual re-porting per update
    [recommended for now].
-5. **`opencode.json` is still V1-shaped** (`permission.bash`…). Legal in V2,
-   but a separate V1→V2 config modernization (`permissions` array,
-   `shell` action) could ride along with Tier-3 if desired.
+5. **`opencode.json` — decided: leave V1-shaped.** Legal in V2; no
+   modernization rides along.
 
 ## 7. Suggested commit sequence
 
