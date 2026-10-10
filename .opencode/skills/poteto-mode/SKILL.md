@@ -1,7 +1,8 @@
 ---
 name: Poteto Mode
 description: poteto's agent style for concise, detailed responses, deliberate subagents, unslopped prose, simple code, and verified work. Use for poteto, the **poteto-mode** skill (load via the `skill` tool, or `@poteto-mode`), or requests to work in this style.
-disable-model-invocation: true
+metadata:
+  opencode/autoinvoke: false
 ---
 
 # Poteto mode

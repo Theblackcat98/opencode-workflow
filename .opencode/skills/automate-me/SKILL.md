@@ -1,7 +1,8 @@
 ---
 name: automate-me
 description: "Use for \"automate me\", \"create/update/refresh my -mode skill\", \"turn/capture my preferences or working style into a skill\", or wanting agents to follow how the user works. Drafts or revises a personal -mode skill via skill authoring + unslop, optionally pulling fresh evidence from recent transcripts."
-disable-model-invocation: true
+metadata:
+  opencode/autoinvoke: false
 ---
 
 # Automate me
@@ -70,7 +71,7 @@ Author the SKILL.md directly (Cursor's built-in `create-skill` is Cursor-only). 
 - Handle: the user's first name or chosen identifier.
 - Frontmatter `description`: trigger on their name + `<handle>-mode` + "work in their style", not on generic keywords like "write code" or "review PR".
 - Frontmatter formatting: keep `description` as one YAML scalar. Quote it or use `description: >-` with indented continuation lines when punctuation or wrapping requires it.
-- Frontmatter `disable-model-invocation: true` by default. Opt out only if the user explicitly wants their mode to apply on every turn.
+- Frontmatter `metadata: {opencode/autoinvoke: false}` by default, so the skill stays out of the model's available list. Opt out only if the user explicitly wants their mode to apply on every turn.
 
 ### 5. Iterate on prose
 

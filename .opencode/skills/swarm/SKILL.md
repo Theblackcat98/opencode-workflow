@@ -1,7 +1,8 @@
 ---
 name: swarm
 description: "Fan out N parallel workers, drain them, and return one report. Use for the **swarm** skill (load via the `skill` tool, or `@swarm`), 'swarm this', or parallel coverage, races, gauntlets, and exploration."
-disable-model-invocation: true
+metadata:
+  opencode/autoinvoke: false
 ---
 
 # Swarm

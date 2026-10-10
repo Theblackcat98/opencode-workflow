@@ -1,7 +1,8 @@
 ---
 name: interrogate
 description: "Use for \"interrogate\", \"adversarial review\", \"challenge this\", \"stress test this code\", \"find blind spots\", or \"tear this apart\". Multiple LLM reviewers challenge changes from independent angles."
-disable-model-invocation: true
+metadata:
+  opencode/autoinvoke: false
 ---
 
 # Interrogate

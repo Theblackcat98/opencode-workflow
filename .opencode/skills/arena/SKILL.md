@@ -1,7 +1,8 @@
 ---
 name: arena
 description: "Spawn N parallel candidates at the same task, pick a base, graft the strongest parts of the losers into it. Use for the **arena** skill (load via the `skill` tool, or `@arena`), 'arena this', 'throw it in the arena', or when one attempt at a non-trivial artifact would lock in the wrong shape."
-disable-model-invocation: true
+metadata:
+  opencode/autoinvoke: false
 ---
 
 # Arena

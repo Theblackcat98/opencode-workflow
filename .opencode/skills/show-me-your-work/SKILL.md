@@ -1,7 +1,8 @@
 ---
 name: show-me-your-work
 description: "Keep a reviewable decision trail for long-running or unattended work: a TSV log with one row per decision (what, why, evidence, result). Local by default; commit it when a reviewer needs the trail to trust the result. Use for the **show-me-your-work** skill (load via the `skill` tool, or `@show-me-your-work`), autonomous or multi-phase runs, or work a human reviews after stepping away."
-disable-model-invocation: true
+metadata:
+  opencode/autoinvoke: false
 ---
 
 # Show me your work

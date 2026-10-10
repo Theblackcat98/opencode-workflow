@@ -142,7 +142,7 @@ contract needed.
 |---|---|
 | `name` | Keep (display label only; ID is path-derived). |
 | `description` | Keep. Rewrite any `/slash` self-reference per D4. |
-| `disable-model-invocation: true` | **Keep** on all 50 skills that carry it (D1 decided: 50 hidden / 1 visible). Valid V2 field. |
+| `disable-model-invocation: true` | **Replace** with `metadata: {opencode/autoinvoke: false}`. D1 kept the Cursor spelling; the installed binary (v2.0.20) ignores it, leaving all skills model-visible. Verified by A/B probe 2026-10-10. |
 | `paths` (typescript-best-practices) | Drop (Cursor glob-gating; opencode has no equivalent). |
 | `mode`, `icon`, `color`, `reminder` (poteto-mode) | Drop. Fold `reminder` text into the description or body top. |
 | `license` / `metadata` | None present; optional add: `license: MIT` from plugin.json. |
@@ -237,8 +237,14 @@ changes). `typescript-best-practices` keeps `references/patterns.md`, drops
    `\b/why\b`-style slash refs, `AskQuestion`, `is_background`,
    `alwaysApply` outside fenced examples.
 3. **Frontmatter parse:** YAML loads; only allowlisted fields present
-   (`name`, `description`, `license`, `metadata`, and
-   `disable-model-invocation` where D1 keeps it).
+   (`name`, `description`, `metadata`, and `license` where used).
+   `disable-model-invocation` must be zero hits: opencode v2.0.20 ignores it
+   (the frontmatter parser reads only `name`, `description`, `metadata`), so a
+   skill carrying it is model-visible instead of hidden. The working spelling
+   is `metadata: {opencode/autoinvoke: false}`. Confirm with
+   `opencode api get "/api/skill?location[directory]=<repo>"`: hidden skills
+   report `autoinvoke: false`. A doc check alone passes this defect, so the
+   runtime check is required.
 4. **Runtime:** restart opencode (config loads at startup — repo
    convention); `opencode debug config` shows no errors; load one Tier-1
    skill via `@<id>`; ask the model to route a fake task through
