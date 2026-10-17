@@ -19,6 +19,10 @@ debugging, iteration on failures, lint/format, dependency inspection, docs,
 git status/diff/history, branches/worktrees, routine commits, code review,
 verification, delegation, parallelization.
 
+How the pieces fit: this constitution is the behavioral contract; permissions
+(`opencode.json`, agent frontmatter) are capability enforcement; commands are
+workflow entry points; worktrees are the isolation primitive.
+
 ## 2. Approval boundary (stop and ask the user)
 
 - Production deployments
@@ -35,7 +39,9 @@ verification, delegation, parallelization.
 - Actions exposing private data
 - Deviating substantially from the requested feature
 
-Everything else is executed autonomously.
+Hard gates (push, destructive git, publish, `rm -rf`) are enforced
+mechanically by permissions; the rest are judgment gates the lead must
+recognize and stop for. Everything else is executed autonomously.
 
 ## 3. The engineering loop (lead's contract)
 
@@ -66,5 +72,27 @@ Every completed task ends with a short report:
 
 - **Done:** 1–3 lines, feature-level (not file-level) summary
 - **Verified:** tests/lint results
+- **Delegation:** which subagents did what
 - **Decisions:** anything redesigned or deviated from convention
 - **Needs you:** anything requiring human judgment, approval-gate items
+
+## 5. Project memory (CHARTER / ROADMAP / DECISIONS)
+
+These three files live in `.opencode/` alongside this constitution, travel
+with the template into every new project, and are the project's durable
+memory. This constitution is injected automatically; the three memory files
+are not — open and read them explicitly. Consult them at loop steps 1–3
+(understand / inspect / plan) before any non-trivial work:
+
+- `CHARTER.md` — what the project is and is not. If a request contradicts
+  it, stop and ask the human instead of building.
+- `ROADMAP.md` — the only list of approved features. If it is not approved
+  here, do not design, plan, or build it. Proposals go under "Proposed" and
+  need human approval before becoming "Approved".
+- `DECISIONS.md` — past decisions. Do not relitigate them. If one looks
+  wrong, add a new dated entry superseding it and get human approval — never
+  silently rewrite or ignore an old one.
+
+When this template is adopted by a new project, `CHARTER.md` must be
+rewritten for the new product; `ROADMAP.md` / `DECISIONS.md` travel along as
+starting memory (archive inapplicable entries, never delete them).

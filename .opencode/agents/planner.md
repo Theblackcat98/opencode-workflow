@@ -1,6 +1,6 @@
 ---
 description: Architecture and planning subagent. Analyzes the codebase and produces concrete implementation plans with file-level steps, tests, and risks. Read-only.
-mode: subagent
+mode: primary
 permission:
   edit: deny
   bash:
